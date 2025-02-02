@@ -5,11 +5,11 @@ import * as overlay from './action/overlay.operation';
 import * as info from './action/info.operation';
 import * as custom from './action/custom.operation';
 
-export class FfmpegMerge implements INodeType {
+export class Ffmpeg implements INodeType {
     description: INodeTypeDescription = {
-        displayName: 'FFMPEG',
-        name: 'FFMPEG',
-        icon: { light: 'file:ffmpegmerge.light.svg', dark: 'file:ffmpegmerge.dark.svg' },
+        displayName: 'Ffmpeg',
+        name: 'ffmpeg',
+        icon: { light: 'file:ffmpeg.light.svg', dark: 'file:ffmpeg.dark.svg' },
         group: ['input'],
         version: 1,
         subtitle: 'Merge videos using FFMPEG',
@@ -33,7 +33,8 @@ export class FfmpegMerge implements INodeType {
                     { name: 'Custom Command', value: 'custom' },
                 ],
                 default: 'merge',
-                description: 'Choose operation: Merge multiple videos or run a custom FFmpeg command.',
+                noDataExpression: true,
+                description: 'Choose operation: Merge multiple videos or run a custom FFmpeg command',
 
 
             },
@@ -43,7 +44,7 @@ export class FfmpegMerge implements INodeType {
                 type: 'number',
                 default: 2,
                 required: true,
-                description: 'Minimum number of files required before merging.',
+                description: 'Minimum number of files required before merging',
                 displayOptions: {
                     show: {
                         operation: ['merge'],
@@ -56,12 +57,13 @@ export class FfmpegMerge implements INodeType {
                 type: 'string',
                 default: 'merged_video.mp4',
                 required: true,
-                description: 'Name of the output video file.',
+                description: 'Name of the output video file',
                 displayOptions: {
                     show: {
                         operation: ['merge', 'overlay', 'custom'],
                     },
                 },
+
             },
             {
                 displayName: 'Output Binary Property',
@@ -69,12 +71,13 @@ export class FfmpegMerge implements INodeType {
                 type: 'string',
                 default: 'mergedVideo',
                 required: true,
-                description: 'Name of the output binary property.',
+                description: 'Name of the output binary property',
                 displayOptions: {
                     show: {
                         operation: ['merge', 'overlay', 'custom'],
                     },
                 },
+
             },
             {
                 displayName: 'FFmpeg Merge Arguments',
@@ -87,6 +90,7 @@ export class FfmpegMerge implements INodeType {
                         operation: ['merge'],
                     },
                 },
+
             },
             {
 				displayName: 'FFmpeg Overlay Arguments',

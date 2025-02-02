@@ -1,5 +1,5 @@
 {
-	"node": "n8n-nodes-base.ffmpegmerge",
+	"node": "n8n-nodes-base.ffmpeg",
 	"nodeVersion": "1.0",
 	"codexVersion": "1.0",
 	"categories": ["Core Nodes"],
@@ -7,12 +7,16 @@
 	"resources": {
 		"primaryDocumentation": [
 			{
-				"url": "https://ffmpeg.org/ffmpeg.html"
+				"url": "https://github.com/shmeller86/n8n-nodes-ffmpeg"
+			},
+			{
+				"url": "https://ffmpeg.org/"
 			}
 		]
 	},
+
 	"alias": [
-		"ffmpegmerge",
+		"ffmpeg",
         "video",
         "merge"
 	]
