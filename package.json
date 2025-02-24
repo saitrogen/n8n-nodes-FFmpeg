@@ -1,23 +1,20 @@
 {
-  "name": "n8n-nodes-ffmpeg",
+  "name": "@saitrogen/n8n-nodes-ffmpeg",
   "version": "0.1.4",
-  "description": "Merge videos using FFMPEG",
+  "description": "Edit videos using FFMPEG",
   "keywords": [
     "n8n-community-node-package"
   ],
   "license": "MIT",
-  "homepage": "https://github.com/shmeller86/n8n-nodes-ffmpeg",
+  "homepage": "https://github.com/saitrogen/n8n-nodes-ffmpeg",
   "author": {
-    "name": "Igor Che",
-    "email": "shmeller86@gmail.com"
+    "name": "saitrogen"
   },
-
   "repository": {
     "type": "git",
-    "url": "https://github.com/shmeller86/n8n-nodes-ffmpeg.git"
+    "url": "https://github.com/saitrogen/n8n-nodes-ffmpeg.git"
   },
   "main": "index.js",
-
   "scripts": {
     "build": "tsc && gulp build:icons",
     "dev": "tsc --watch",
@@ -34,11 +31,10 @@
     "nodes": [
       "dist/nodes/Ffmpeg/Ffmpeg.node.js"
     ]
-
-
   },
   "devDependencies": {
     "@types/node": "^22.13.0",
+    "@types/shell-quote": "^1.7.5",
     "@typescript-eslint/parser": "~5.45",
     "eslint-plugin-n8n-nodes-base": "^1.11.0",
     "gulp": "^4.0.2",
@@ -50,6 +46,7 @@
     "n8n-workflow": "*"
   },
   "dependencies": {
-    "n8n-core": "^1.75.0"
+    "n8n-core": "^1.75.0",
+    "shell-quote": "^1.8.2"
   }
 }

@@ -6,6 +6,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import * as childProcess from 'child_process';
+import * as shell from 'shell-quote';
 
 
 
@@ -84,24 +85,74 @@ export async function execute(
             `output_${Date.now()}_${Math.random().toString(36).slice(2)}.mp4`
         );
 
-        const ffmpegCommand = ffmpegMergeArgs
-            .replace('{input}', `"${concatFilePath}"`)
-            .replace('{output}', `"${outputFilePath}"`);
-        
+        const videoCodec = this.getNodeParameter('videoCodec', 0) as string;
+        const audioCodec = this.getNodeParameter('audioCodec', 0) as string;
+        const resolution = this.getNodeParameter('resolution', 0) as string;
+        const videoBitrate = this.getNodeParameter('videoBitrate', 0) as number;
+        const frameRate = this.getNodeParameter('frameRate', 0) as number;
+
+        let ffmpegCommand = ffmpegMergeArgs;
+
+        if (videoCodec !== 'copy') {
+            ffmpegCommand = `-c:v ${videoCodec} ${ffmpegCommand}`;
+        }
+
+        if (audioCodec !== 'copy') {
+            ffmpegCommand = `-c:a ${audioCodec} ${ffmpegCommand}`;
+        }
+
+        if (resolution) {
+            ffmpegCommand = `-s ${resolution} ${ffmpegCommand}`;
+        }
+
+        if (videoBitrate) {
+            ffmpegCommand = `-b:v ${videoBitrate}k ${ffmpegCommand}`;
+        }
+
+        if (frameRate) {
+            ffmpegCommand = `-r ${frameRate} ${ffmpegCommand}`;
+        }
+
+        ffmpegCommand = ` -progress pipe:1 ${ffmpegCommand}`;
+
+        const escapedConcatFilePath = shell.quote([concatFilePath]);
+        const escapedOutputFilePath = shell.quote([outputFilePath]);
+
+        ffmpegCommand = ffmpegCommand.replace('{input}', escapedConcatFilePath).replace('{output}', escapedOutputFilePath);
+
         console.log("FFmpeg Command:", ffmpegCommand);
 
-        try {
-            const execOptions: childProcess.ExecSyncOptions = {
-                stdio: 'inherit',
-                maxBuffer: 1024 * 1024 * 50, 
-                windowsHide: true,
-            };
+        const ffmpegProcess = childProcess.spawn('ffmpeg', ffmpegCommand.split(' '), {
+            stdio: ['ignore', 'pipe', 'pipe'],
+            windowsHide: true,
+        });
 
-            childProcess.execSync(`ffmpeg ${ffmpegCommand}`, execOptions);
-        } catch (error) {
+        ffmpegProcess.stderr.on('data', (data) => {
+            const output = data.toString();
+            console.log("FFmpeg stderr:", output);
+            if (output.includes('frame=')) {
+                const frameMatch = output.match(/frame=\s*(\d+)/);
+                if (frameMatch) {
+                    //const currentFrame = parseInt(frameMatch[1], 10);
+                    //TODO: Calculate total frames
+                    //this.emitProgress(progress);
+                }
+            }
+        });
+
+        ffmpegProcess.on('close', (code) => {
+            if (code !== 0) {
+                this.getWorkflowStaticData('node').files = [];
+                const errorMessage = `FFmpeg merge failed with code ${code}`;
+                throw new Error(errorMessage);
+            }
+        });
+
+        ffmpegProcess.on('error', (error) => {
             this.getWorkflowStaticData('node').files = [];
-            throw new Error(`FFmpeg merge failed: ${error}`);
-        }
+            const errorMessage = `FFmpeg merge failed: ${error.message}`;
+            throw new Error(errorMessage);
+        });
 
         const outputBinaryData = fs.readFileSync(outputFilePath);
         const fileSize = fs.statSync(outputFilePath).size;
@@ -139,7 +190,7 @@ export async function execute(
 
     } catch (error) {
         this.getWorkflowStaticData('node').files = [];
-        
+
         if (error instanceof Error) {
             throw new Error(`FFmpeg Merge Error: ${error.message}`);
         }

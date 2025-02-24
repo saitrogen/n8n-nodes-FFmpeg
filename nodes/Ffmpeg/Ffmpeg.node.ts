@@ -116,7 +116,76 @@ export class Ffmpeg implements INodeType {
                     },
                 },
             },
-
+            {
+                displayName: 'Video Codec',
+                name: 'videoCodec',
+                type: 'options',
+                options: [
+                    { name: 'libx264', value: 'libx264' },
+                    { name: 'libx265', value: 'libx265' },
+                    { name: 'copy', value: 'copy' },
+                ],
+                default: 'libx264',
+                description: 'Select the video codec',
+                displayOptions: {
+                    show: {
+                        operation: ['merge', 'overlay', 'custom'],
+                    },
+                },
+            },
+            {
+                displayName: 'Audio Codec',
+                name: 'audioCodec',
+                type: 'options',
+                options: [
+                    { name: 'aac', value: 'aac' },
+                    { name: 'mp3', value: 'mp3' },
+                    { name: 'copy', value: 'copy' },
+                ],
+                default: 'aac',
+                description: 'Select the audio codec',
+                displayOptions: {
+                    show: {
+                        operation: ['merge', 'overlay', 'custom'],
+                    },
+                },
+            },
+            {
+                displayName: 'Resolution',
+                name: 'resolution',
+                type: 'string',
+                default: '1920x1080',
+                description: 'Set the video resolution (e.g., 1920x1080)',
+                displayOptions: {
+                    show: {
+                        operation: ['merge', 'overlay', 'custom'],
+                    },
+                },
+            },
+            {
+                displayName: 'Video Bitrate (Kbps)',
+                name: 'videoBitrate',
+                type: 'number',
+                default: 2000,
+                description: 'Set the video bitrate in kilobits per second',
+                displayOptions: {
+                    show: {
+                        operation: ['merge', 'overlay', 'custom'],
+                    },
+                },
+            },
+            {
+                displayName: 'Frame Rate (Fps)',
+                name: 'frameRate',
+                type: 'number',
+                default: 30,
+                description: 'Set the video frame rate',
+                displayOptions: {
+                    show: {
+                        operation: ['merge', 'overlay', 'custom'],
+                    },
+                },
+            },
         ],
     };
 

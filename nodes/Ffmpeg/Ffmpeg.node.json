@@ -7,7 +7,7 @@
 	"resources": {
 		"primaryDocumentation": [
 			{
-				"url": "https://github.com/shmeller86/n8n-nodes-ffmpeg"
+				"url": "https://github.com/saitrogen/n8n-nodes-ffmpeg"
 			},
 			{
 				"url": "https://ffmpeg.org/"
