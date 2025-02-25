@@ -1,3 +1,5 @@
+
+
 import type {
 	IExecuteFunctions,
 	INodeExecutionData,
@@ -17,7 +19,8 @@ export async function execute(
 	const staticData = this.getWorkflowStaticData('node');
 	const outputFileName = this.getNodeParameter('outputFileName', 0) as string;
 	const outputBinary = this.getNodeParameter('outputBinary', 0) as string;
-	const ffmpegArgs = this.getNodeParameter('ffmpegOverlayArgs', 0) as string;
+	let ffmpegArgs = this.getNodeParameter('ffmpegOverlayArgs', 0) as string;
+	const template = this.getNodeParameter('template', 0) as string; // ✅ Get template
 
 	let storedFiles: string[] = (staticData.overlayFiles as string[]) || [];
 	storedFiles = storedFiles.filter(filePath => fs.existsSync(filePath));
@@ -54,18 +57,50 @@ export async function execute(
 	const [videoPath, audioPath] = storedFiles;
 	const outputPath = path.join(tempDir, `output_${Date.now()}.mp4`);
 
-	const cmd = ffmpegArgs
-		.replace('{video}', `"${videoPath}"`)
-		.replace('{audio}', `"${audioPath}"`)
-		.replace('{output}', `"${outputPath}"`);
+	if (template === 'Overlay Text') {
+		const text = this.getNodeParameter('text', 0) as string;
+		const fontFile = this.getNodeParameter('fontFile', 0) as string;
+		const fontSize = this.getNodeParameter('fontSize', 0) as number;
+		const fontColor = this.getNodeParameter('fontColor', 0) as string;
+		const xOffset = this.getNodeParameter('xOffset', 0) as string;
+		const yOffset = this.getNodeParameter('yOffset', 0) as string;
 
+		const drawTextFilter = `drawtext=text='${text}':fontfile='${fontFile}':fontsize=${fontSize}:fontcolor=${fontColor}:x=${xOffset}:y=${yOffset}`;
+		ffmpegArgs = `-i "${videoPath}" -vf "${drawTextFilter}" -i "${audioPath}" -c:v copy -c:a aac "${outputPath}"`;
+	} else {
+		ffmpegArgs = ffmpegArgs
+			.replace('{video}', `"${videoPath}"`)
+			.replace('{audio}', `"${audioPath}"`)
+			.replace('{output}', `"${outputPath}"`);
+	}
+
+
+
+	let stderrOutput = '';
 	try {
-		childProcess.execSync(`ffmpeg ${cmd}`, { stdio: 'ignore' });
+		const ffmpegProcess = childProcess.spawn('ffmpeg', ffmpegArgs.split(' '), { stdio: ['ignore', 'pipe', 'pipe'] });
+		ffmpegProcess.stderr.on('data', (data) => {
+			stderrOutput += data.toString();
+		});
+		ffmpegProcess.on('close', (code) => {
+			if (code !== 0) {
+				storedFiles.forEach(f => fs.existsSync(f) && fs.unlinkSync(f));
+				if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath);
+				staticData.overlayFiles = [];
+				throw new Error(`FFmpeg overlay failed with code ${code}. Stderr: ${stderrOutput}`);
+			}
+		});
+		ffmpegProcess.on('error', (error) => {
+			storedFiles.forEach(f => fs.existsSync(f) && fs.unlinkSync(f));
+			if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath);
+			staticData.overlayFiles = [];
+			throw new Error(`FFmpeg overlay failed: ${error.message}. Stderr: ${stderrOutput}`);
+		});
 	} catch (error) {
 		storedFiles.forEach(f => fs.existsSync(f) && fs.unlinkSync(f));
 		if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath);
 		staticData.overlayFiles = [];
-		throw new Error(`FFmpeg overlay failed: ${error}`);
+		throw new Error(`FFmpeg overlay failed: ${error}. Stderr: ${stderrOutput}`);
 	}
 
 	const mergedData = fs.readFileSync(outputPath);

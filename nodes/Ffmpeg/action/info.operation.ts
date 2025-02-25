@@ -34,11 +34,26 @@ export async function execute(
 
 		const cmd = `ffprobe -v quiet -print_format json -show_format -show_streams "${tempFilePath}"`;
 		let ffprobeOutput: string;
+		let stderrOutput = '';
 		try {
+			const ffprobeProcess = childProcess.spawn('ffprobe', cmd.split(' '), { stdio: ['ignore', 'pipe', 'pipe'] });
+			ffprobeProcess.stderr.on('data', (data) => {
+				stderrOutput += data.toString();
+			});
+			ffprobeProcess.on('close', (code) => {
+				if (code !== 0) {
+					if (fs.existsSync(tempFilePath)) fs.unlinkSync(tempFilePath);
+					throw new Error(`FFprobe error with code ${code}. Stderr: ${stderrOutput}`);
+				}
+			});
+			ffprobeProcess.on('error', (error) => {
+				if (fs.existsSync(tempFilePath)) fs.unlinkSync(tempFilePath);
+				throw new Error(`FFprobe error: ${error.message}. Stderr: ${stderrOutput}`);
+			});
 			ffprobeOutput = childProcess.execSync(cmd, { encoding: 'utf-8' });
 		} catch (error) {
 			if (fs.existsSync(tempFilePath)) fs.unlinkSync(tempFilePath);
-			throw new Error(`FFprobe error: ${error}`);
+			throw new Error(`FFprobe error: ${error}. Stderr: ${stderrOutput}`);
 		}
 
 		fs.unlinkSync(tempFilePath);

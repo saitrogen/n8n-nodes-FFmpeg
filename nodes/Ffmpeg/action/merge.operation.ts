@@ -140,17 +140,22 @@ export async function execute(
             }
         });
 
+        let stderrOutput = '';
+        ffmpegProcess.stderr.on('data', (data) => {
+            stderrOutput += data.toString();
+        });
+
         ffmpegProcess.on('close', (code) => {
             if (code !== 0) {
                 this.getWorkflowStaticData('node').files = [];
-                const errorMessage = `FFmpeg merge failed with code ${code}`;
+                const errorMessage = `FFmpeg merge failed with code ${code}. Stderr: ${stderrOutput}`;
                 throw new Error(errorMessage);
             }
         });
 
         ffmpegProcess.on('error', (error) => {
             this.getWorkflowStaticData('node').files = [];
-            const errorMessage = `FFmpeg merge failed: ${error.message}`;
+            const errorMessage = `FFmpeg merge failed: ${error.message}. Stderr: ${stderrOutput}`;
             throw new Error(errorMessage);
         });
 
